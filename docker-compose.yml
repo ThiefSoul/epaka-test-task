@@ -14,6 +14,12 @@ services:
       AWS_ENDPOINT: http://localstack:4566
       S3_HOT_BUCKET: epaka-hot
       S3_ARCHIVE_BUCKET: epaka-archive
+      DB_HOST: ${DB_HOST:-db}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME:-epaka}
+      DB_USER: ${DB_USER:-epaka}
+      DB_PASSWORD: ${DB_PASSWORD:-epaka}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://${DB_USER:-epaka}:${DB_PASSWORD:-epaka}@${DB_HOST:-db}:${DB_PORT:-5432}/${DB_NAME:-epaka}}
     ports:
       - "3000:3000"
     volumes:
@@ -23,6 +29,8 @@ services:
       redis:
         condition: service_healthy
       localstack:
+        condition: service_healthy
+      db:
         condition: service_healthy
 
   redis:
@@ -63,7 +71,25 @@ services:
       retries: 20
       start_period: 10s
 
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: ${DB_NAME:-epaka}
+      POSTGRES_USER: ${DB_USER:-epaka}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-epaka}
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
 volumes:
   app_node_modules:
   redis_data:
   localstack_data:
+  db_data:
