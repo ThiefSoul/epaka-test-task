@@ -45,4 +45,15 @@ Alternatywą byłaby baza metadanych, np. PostgreSQL.
 Ułatwiłaby szybkie odbudowanie cache, ale zwiększa koszt infrastruktury i dokłada kolejny punkt, w którym trzeba
 pilnować spójności danych.
 
+### Storage
+
+Na ten moment używam jednego `StorageService`, który jest odpowiedzialny za komunikację z S3/LocalStack.
+
+Nie dokładam osobnego interfejsu ani kolejnej warstwy abstrakcji, bo obecnie jest tylko jedna implementacja.
+Jeśli później pojawi się potrzeba obsługi innego storage, wtedy będzie sens to wydzielić.
+
+Dodatkowo utworzyłem test integracyjny dla `StorageService` zamiast jednostkowego,
+ponieważ na potrzeby zadania daje on większą wartość.
+Produkcyjnie mimo wszystko raczej pojawiłby się test jednostkowy mockujący S3.
+
 ## Uwagi
