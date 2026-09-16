@@ -17,7 +17,7 @@ import { FileKeyPartPipe } from './file-key-part.pipe.js';
 import { FileStatusIdsPipe } from './file-status-ids.pipe.js';
 import { FilesService } from './files.service.js';
 
-@Controller('files')
+@Controller({ path: 'files', version: '1' })
 export class FilesController {
   constructor(private readonly files: FilesService) {}
 

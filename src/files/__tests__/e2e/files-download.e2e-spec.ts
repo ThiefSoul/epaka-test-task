@@ -29,13 +29,13 @@ describe('Files download e2e', () => {
     const body = Buffer.from([0xde, 0xad, 0xbe, 0xef]);
 
     await request(app.getHttpServer())
-      .post(`/files/${fileType}/${fileId}`)
+      .post(`/v1/files/${fileType}/${fileId}`)
       .set('Content-Type', 'application/octet-stream')
       .send(body)
       .expect(201);
 
     const response = await request(app.getHttpServer())
-      .get(`/files/${fileType}/${fileId}`)
+      .get(`/v1/files/${fileType}/${fileId}`)
       .expect('Content-Type', /application\/octet-stream/)
       .expect(200);
 
@@ -46,7 +46,7 @@ describe('Files download e2e', () => {
     const { app } = context;
 
     await request(app.getHttpServer())
-      .get(`/files/${fileTypePrefix}-${randomUUID()}/missing`)
+      .get(`/v1/files/${fileTypePrefix}-${randomUUID()}/missing`)
       .expect(404);
   });
 
@@ -54,7 +54,7 @@ describe('Files download e2e', () => {
     const { app } = context;
 
     await request(app.getHttpServer())
-      .get(`/files/${fileTypePrefix}.invalid/123`)
+      .get(`/v1/files/${fileTypePrefix}.invalid/123`)
       .expect(400);
   });
 
@@ -73,7 +73,7 @@ describe('Files download e2e', () => {
     await storage.put(FileStorageType.ARCHIVE, key, body);
 
     const response = await request(app.getHttpServer())
-      .get(`/files/${fileType}/${fileId}`)
+      .get(`/v1/files/${fileType}/${fileId}`)
       .expect('Content-Type', /application\/octet-stream/)
       .expect(200);
 

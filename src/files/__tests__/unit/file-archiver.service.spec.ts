@@ -101,11 +101,14 @@ describe('FileArchiverService', () => {
       { id: 1, storageType: FileStorageType.HOT },
       { storageType: FileStorageType.ARCHIVE },
     );
+    expect(cache.forgetFile).toHaveBeenCalledWith('invoice', '123');
+    expect(cache.forgetFile.mock.invocationCallOrder[0]).toBeLessThan(
+      repository.update.mock.invocationCallOrder[0],
+    );
     expect(storage.delete).toHaveBeenCalledWith(
       FileStorageType.HOT,
       'invoice/123',
     );
-    expect(cache.forgetFile).toHaveBeenCalledWith('invoice', '123');
   });
 
   it('does not delete hot source when archive verification fails', async () => {
@@ -126,7 +129,7 @@ describe('FileArchiverService', () => {
     await service.archiveEligibleFiles();
 
     expect(storage.delete).not.toHaveBeenCalled();
-    expect(cache.forgetFile).not.toHaveBeenCalled();
+    expect(cache.forgetFile).toHaveBeenCalledWith('invoice', '123');
   });
 
   it('does not fail the batch when one file fails', async () => {
@@ -149,18 +152,16 @@ describe('FileArchiverService', () => {
     );
   });
 
-  it('does not fail successful archive when cache cleanup fails', async () => {
+  it('does not update metadata or delete hot source when cache cleanup fails', async () => {
     repository.find.mockResolvedValue([fileMetadata()]);
     cache.forgetFile.mockRejectedValue(new Error('redis failed'));
 
     await service.archiveEligibleFiles();
 
-    expect(storage.delete).toHaveBeenCalledWith(
-      FileStorageType.HOT,
-      'invoice/123',
-    );
+    expect(repository.update).not.toHaveBeenCalled();
+    expect(storage.delete).not.toHaveBeenCalled();
     expect(warnSpy).toHaveBeenCalledWith(
-      'Archived file invoice/123, but cache cleanup failed: redis failed',
+      'Could not archive file invoice/123: redis failed',
     );
   });
 

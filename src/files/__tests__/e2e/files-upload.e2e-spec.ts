@@ -30,7 +30,7 @@ describe('Files upload e2e', () => {
     const key = `${fileType}/${fileId}`;
 
     await request(app.getHttpServer())
-      .post(`/files/${fileType}/${fileId}`)
+      .post(`/v1/files/${fileType}/${fileId}`)
       .set('Content-Type', 'application/octet-stream')
       .send(body)
       .expect(201);
@@ -50,7 +50,7 @@ describe('Files upload e2e', () => {
     const { app } = context;
 
     await request(app.getHttpServer())
-      .post(`/files/${fileTypePrefix}-${randomUUID()}/empty`)
+      .post(`/v1/files/${fileTypePrefix}-${randomUUID()}/empty`)
       .set('Content-Type', 'application/octet-stream')
       .send(Buffer.alloc(0))
       .expect(400);
@@ -63,13 +63,13 @@ describe('Files upload e2e', () => {
     const body = Buffer.from('test file');
 
     await request(app.getHttpServer())
-      .post(`/files/${fileType}/${fileId}`)
+      .post(`/v1/files/${fileType}/${fileId}`)
       .set('Content-Type', 'application/octet-stream')
       .send(body)
       .expect(201);
 
     await request(app.getHttpServer())
-      .post(`/files/${fileType}/${fileId}`)
+      .post(`/v1/files/${fileType}/${fileId}`)
       .set('Content-Type', 'application/octet-stream')
       .send(body)
       .expect(409);
@@ -79,7 +79,7 @@ describe('Files upload e2e', () => {
     const { app } = context;
 
     await request(app.getHttpServer())
-      .post(`/files/${fileTypePrefix}.invalid/123`)
+      .post(`/v1/files/${fileTypePrefix}.invalid/123`)
       .set('Content-Type', 'application/octet-stream')
       .send(Buffer.from('test file'))
       .expect(400);

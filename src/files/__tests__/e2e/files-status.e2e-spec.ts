@@ -37,7 +37,7 @@ describe('Files status e2e', () => {
     await createArchivedFile(context, fileType, archiveFileId);
 
     const response = await request(app.getHttpServer())
-      .post(`/files/${fileType}/status`)
+      .post(`/v1/files/${fileType}/status`)
       .send({ ids: [hotFileId, archiveFileId, missingFileId] })
       .expect(200);
 
@@ -58,7 +58,7 @@ describe('Files status e2e', () => {
     const { app } = context;
 
     await request(app.getHttpServer())
-      .post(`/files/${fileTypePrefix}/status`)
+      .post(`/v1/files/${fileTypePrefix}/status`)
       .send({ ids: ['valid', 'invalid.id'] })
       .expect(400);
   });

@@ -77,10 +77,16 @@ describe('FilesService delete', () => {
     );
   });
 
-  it('removes file from cache after delete', async () => {
+  it('removes file from cache before deleting storage and metadata', async () => {
     await service.delete('invoice', '123');
 
     expect(cache.forgetFile).toHaveBeenCalledWith('invoice', '123');
+    expect(cache.forgetFile.mock.invocationCallOrder[0]).toBeLessThan(
+      storage.delete.mock.invocationCallOrder[0],
+    );
+    expect(cache.forgetFile.mock.invocationCallOrder[0]).toBeLessThan(
+      repository.delete.mock.invocationCallOrder[0],
+    );
   });
 
   it('uses archive storage when metadata points to archive', async () => {
@@ -111,14 +117,14 @@ describe('FilesService delete', () => {
     expect(cache.forgetFile).not.toHaveBeenCalled();
   });
 
-  it('does not fail delete when cache cleanup fails', async () => {
+  it('does not delete storage or metadata when cache cleanup fails', async () => {
     cache.forgetFile.mockRejectedValue(new Error('redis failed'));
 
-    await expect(service.delete('invoice', '123')).resolves.toBeUndefined();
-
-    expect(repository.delete).toHaveBeenCalledWith(1);
-    expect(warnSpy).toHaveBeenCalledWith(
-      'Deleted file invoice/123, but cache cleanup failed: redis failed',
+    await expect(service.delete('invoice', '123')).rejects.toThrow(
+      'redis failed',
     );
+
+    expect(storage.delete).not.toHaveBeenCalled();
+    expect(repository.delete).not.toHaveBeenCalled();
   });
 });

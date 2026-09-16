@@ -12,7 +12,7 @@ create_bucket() {
   awslocal s3 mb "s3://$bucket"
 }
 
-create_bucket epaka-hot
-create_bucket epaka-archive
+create_bucket "${S3_HOT_BUCKET:-epaka-hot}"
+create_bucket "${S3_ARCHIVE_BUCKET:-epaka-archive}"
 create_bucket epaka-test-hot
 create_bucket epaka-test-archive

@@ -51,7 +51,7 @@ async function upload(fileIndex: number): Promise<void> {
 
   try {
     const response = await fetch(
-      `${config.apiBaseUrl}/files/${fileType}/${fileId}`,
+      `${config.apiBaseUrl}/v1/files/${fileType}/${fileId}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/octet-stream' },
