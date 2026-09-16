@@ -11,6 +11,7 @@ export class FileCacheService implements OnModuleInit, OnModuleDestroy {
 
   constructor(config: ConfigService) {
     this.client = createClient({
+      database: config.getOrThrow<number>('REDIS_DB'),
       socket: {
         host: config.getOrThrow<string>('REDIS_HOST'),
         port: config.getOrThrow<number>('REDIS_PORT'),
