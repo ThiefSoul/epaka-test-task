@@ -1,5 +1,5 @@
 import { BadRequestException, type ArgumentMetadata } from '@nestjs/common';
-import { FileKeyPartPipe } from './file-key-part.pipe.js';
+import { FileKeyPartPipe } from '../../file-key-part.pipe.js';
 
 describe('FileKeyPartPipe', () => {
   const pipe = new FileKeyPartPipe();
