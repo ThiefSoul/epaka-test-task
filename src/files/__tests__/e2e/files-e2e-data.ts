@@ -49,7 +49,9 @@ async function createFile(
     `${fileType}/${fileId}`,
     Buffer.from(`${storageType}/${fileType}/${fileId}`),
   );
-  await context.cache.rememberFile(fileType, fileId, storageType);
+  if (storageType === FileStorageType.HOT) {
+    await context.cache.rememberHotFile(fileType, fileId);
+  }
 }
 
 async function cleanRedis(context: FilesE2eContext): Promise<void> {

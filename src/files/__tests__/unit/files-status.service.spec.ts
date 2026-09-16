@@ -20,9 +20,10 @@ describe('FilesService status', () => {
     delete: ReturnType<typeof vi.fn>;
   };
   let cache: {
-    rememberFile: ReturnType<typeof vi.fn>;
-    getFileStorageType: ReturnType<typeof vi.fn>;
-    getFileStorageTypes: ReturnType<typeof vi.fn>;
+    rememberHotFile: ReturnType<typeof vi.fn>;
+    rememberHotFiles: ReturnType<typeof vi.fn>;
+    hasHotFile: ReturnType<typeof vi.fn>;
+    getHotFileIds: ReturnType<typeof vi.fn>;
   };
   let service: FilesService;
 
@@ -40,9 +41,10 @@ describe('FilesService status', () => {
       delete: vi.fn().mockResolvedValue(undefined),
     };
     cache = {
-      rememberFile: vi.fn().mockResolvedValue(undefined),
-      getFileStorageType: vi.fn().mockResolvedValue(null),
-      getFileStorageTypes: vi.fn().mockResolvedValue(new Map()),
+      rememberHotFile: vi.fn().mockResolvedValue(undefined),
+      rememberHotFiles: vi.fn().mockResolvedValue(undefined),
+      hasHotFile: vi.fn().mockResolvedValue(false),
+      getHotFileIds: vi.fn().mockResolvedValue(new Set()),
     };
 
     service = new FilesService(
@@ -56,20 +58,15 @@ describe('FilesService status', () => {
     warnSpy.mockRestore();
   });
 
-  it('returns statuses from cache when available', async () => {
-    cache.getFileStorageTypes.mockResolvedValue(
-      new Map([
-        ['123', FileStorageType.HOT],
-        ['124', FileStorageType.ARCHIVE],
-      ]),
-    );
+  it('returns hot statuses from cache when available', async () => {
+    cache.getHotFileIds.mockResolvedValue(new Set(['123', '124']));
 
     await expect(
       service.getStatuses('invoice', ['123', '124']),
     ).resolves.toEqual({
       files: [
         { id: '123', exists: true, storageType: FileStorageType.HOT },
-        { id: '124', exists: true, storageType: FileStorageType.ARCHIVE },
+        { id: '124', exists: true, storageType: FileStorageType.HOT },
       ],
     });
 
@@ -77,19 +74,19 @@ describe('FilesService status', () => {
   });
 
   it('uses metadata for ids missing in cache', async () => {
-    cache.getFileStorageTypes.mockResolvedValue(
-      new Map([['123', FileStorageType.HOT]]),
-    );
+    cache.getHotFileIds.mockResolvedValue(new Set(['123']));
     repository.find.mockResolvedValue([
       { fileId: '124', storageType: FileStorageType.ARCHIVE },
+      { fileId: '125', storageType: FileStorageType.HOT },
     ]);
 
     await expect(
-      service.getStatuses('invoice', ['123', '124', '999']),
+      service.getStatuses('invoice', ['123', '124', '125', '999']),
     ).resolves.toEqual({
       files: [
         { id: '123', exists: true, storageType: FileStorageType.HOT },
         { id: '124', exists: true, storageType: FileStorageType.ARCHIVE },
+        { id: '125', exists: true, storageType: FileStorageType.HOT },
         { id: '999', exists: false, storageType: null },
       ],
     });
@@ -97,22 +94,18 @@ describe('FilesService status', () => {
     expect(repository.find).toHaveBeenCalledWith({
       where: {
         fileType: 'invoice',
-        fileId: In(['124', '999']),
+        fileId: In(['124', '125', '999']),
       },
       select: {
         fileId: true,
         storageType: true,
       },
     });
-    expect(cache.rememberFile).toHaveBeenCalledWith(
-      'invoice',
-      '124',
-      FileStorageType.ARCHIVE,
-    );
+    expect(cache.rememberHotFiles).toHaveBeenCalledWith('invoice', ['125']);
   });
 
   it('falls back to metadata when cache read fails', async () => {
-    cache.getFileStorageTypes.mockRejectedValue(new Error('redis failed'));
+    cache.getHotFileIds.mockRejectedValue(new Error('redis failed'));
     repository.find.mockResolvedValue([
       { fileId: '123', storageType: FileStorageType.HOT },
     ]);

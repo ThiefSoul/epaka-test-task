@@ -46,9 +46,7 @@ describe('Files delete e2e', () => {
     await expect(
       metadataRepository.findOneBy({ fileType, fileId }),
     ).resolves.toBeNull();
-    await expect(
-      cache.getFileStorageType(fileType, fileId),
-    ).resolves.toBeNull();
+    await expect(cache.hasHotFile(fileType, fileId)).resolves.toBe(false);
   });
 
   it('returns not found for a missing file', async () => {
@@ -94,8 +92,6 @@ describe('Files delete e2e', () => {
     await expect(
       metadataRepository.findOneBy({ fileType, fileId }),
     ).resolves.toBeNull();
-    await expect(
-      cache.getFileStorageType(fileType, fileId),
-    ).resolves.toBeNull();
+    await expect(cache.hasHotFile(fileType, fileId)).resolves.toBe(false);
   });
 });

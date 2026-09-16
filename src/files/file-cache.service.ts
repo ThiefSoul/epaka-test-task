@@ -1,7 +1,6 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createClient } from 'redis';
-import { FileStorageType } from './persistance/file-storage-type.js';
 
 type RedisClient = ReturnType<typeof createClient>;
 
@@ -23,43 +22,41 @@ export class FileCacheService implements OnModuleInit, OnModuleDestroy {
     await this.client.connect();
   }
 
-  async rememberFile(
-    fileType: string,
-    fileId: string,
-    storageType: FileStorageType,
-  ): Promise<void> {
-    await this.client
-      .multi()
-      .sAdd(this.fileTypeIdsKey(fileType), fileId)
-      .set(this.fileStorageTypeKey(fileType, fileId), storageType)
-      .exec();
+  async rememberHotFile(fileType: string, fileId: string): Promise<void> {
+    await this.rememberHotFiles(fileType, [fileId]);
   }
 
-  async getFileStorageType(
-    fileType: string,
-    fileId: string,
-  ): Promise<FileStorageType | null> {
-    const storageType = await this.client.get(
-      this.fileStorageTypeKey(fileType, fileId),
+  async rememberHotFiles(fileType: string, fileIds: string[]): Promise<void> {
+    if (fileIds.length === 0) {
+      return;
+    }
+
+    await this.client.sAdd(this.hotFilesKey(fileType), fileIds);
+  }
+
+  async hasHotFile(fileType: string, fileId: string): Promise<boolean> {
+    return (
+      (await this.client.sIsMember(this.hotFilesKey(fileType), fileId)) === 1
     );
-
-    return this.parseStorageType(storageType);
   }
 
-  async getFileStorageTypes(
+  async getHotFileIds(
     fileType: string,
     fileIds: string[],
-  ): Promise<Map<string, FileStorageType>> {
-    const storageTypes = await this.client.mGet(
-      fileIds.map((fileId) => this.fileStorageTypeKey(fileType, fileId)),
+  ): Promise<Set<string>> {
+    if (fileIds.length === 0) {
+      return new Set();
+    }
+
+    const exists = await this.client.smIsMember(
+      this.hotFilesKey(fileType),
+      fileIds,
     );
-    const result = new Map<string, FileStorageType>();
+    const result = new Set<string>();
 
-    storageTypes.forEach((storageType, index) => {
-      const parsedStorageType = this.parseStorageType(storageType);
-
-      if (parsedStorageType) {
-        result.set(fileIds[index], parsedStorageType);
+    exists.forEach((isHot, index) => {
+      if (isHot) {
+        result.add(fileIds[index]);
       }
     });
 
@@ -67,11 +64,7 @@ export class FileCacheService implements OnModuleInit, OnModuleDestroy {
   }
 
   async forgetFile(fileType: string, fileId: string): Promise<void> {
-    await this.client
-      .multi()
-      .sRem(this.fileTypeIdsKey(fileType), fileId)
-      .del(this.fileStorageTypeKey(fileType, fileId))
-      .exec();
+    await this.client.sRem(this.hotFilesKey(fileType), fileId);
   }
 
   async onModuleDestroy(): Promise<void> {
@@ -80,19 +73,7 @@ export class FileCacheService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private fileTypeIdsKey(fileType: string): string {
-    return `files:${fileType}:ids`;
-  }
-
-  private fileStorageTypeKey(fileType: string, fileId: string): string {
-    return `files:${fileType}:${fileId}:storage-type`;
-  }
-
-  private parseStorageType(storageType: string | null): FileStorageType | null {
-    return Object.values(FileStorageType).includes(
-      storageType as FileStorageType,
-    )
-      ? (storageType as FileStorageType)
-      : null;
+  private hotFilesKey(fileType: string): string {
+    return `hot-files:${fileType}`;
   }
 }
