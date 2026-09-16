@@ -43,9 +43,7 @@ describe('Files upload e2e', () => {
       fileId,
       storageType: FileStorageType.HOT,
     });
-    await expect(cache.getFileStorageType(fileType, fileId)).resolves.toBe(
-      FileStorageType.HOT,
-    );
+    await expect(cache.hasHotFile(fileType, fileId)).resolves.toBe(true);
   });
 
   it('rejects an empty body', async () => {
