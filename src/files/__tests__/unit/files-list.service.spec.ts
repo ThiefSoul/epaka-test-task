@@ -19,9 +19,9 @@ describe('FilesService list', () => {
     delete: ReturnType<typeof vi.fn>;
   };
   let cache: {
-    rememberFile: ReturnType<typeof vi.fn>;
-    getFileStorageType: ReturnType<typeof vi.fn>;
-    getFileStorageTypes: ReturnType<typeof vi.fn>;
+    rememberHotFile: ReturnType<typeof vi.fn>;
+    hasHotFile: ReturnType<typeof vi.fn>;
+    getHotFileIds: ReturnType<typeof vi.fn>;
   };
   let service: FilesService;
 
@@ -39,9 +39,9 @@ describe('FilesService list', () => {
       delete: vi.fn().mockResolvedValue(undefined),
     };
     cache = {
-      rememberFile: vi.fn().mockResolvedValue(undefined),
-      getFileStorageType: vi.fn().mockResolvedValue(null),
-      getFileStorageTypes: vi.fn().mockResolvedValue(new Map()),
+      rememberHotFile: vi.fn().mockResolvedValue(undefined),
+      hasHotFile: vi.fn().mockResolvedValue(false),
+      getHotFileIds: vi.fn().mockResolvedValue(new Set()),
     };
 
     service = new FilesService(
@@ -67,5 +67,7 @@ describe('FilesService list', () => {
       order: { fileId: 'ASC' },
       select: { fileId: true },
     });
+
+    expect(cache.getHotFileIds).not.toHaveBeenCalled();
   });
 });

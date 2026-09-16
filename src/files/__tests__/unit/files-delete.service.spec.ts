@@ -19,8 +19,8 @@ describe('FilesService delete', () => {
     delete: ReturnType<typeof vi.fn>;
   };
   let cache: {
-    rememberFile: ReturnType<typeof vi.fn>;
-    getFileStorageType: ReturnType<typeof vi.fn>;
+    rememberHotFile: ReturnType<typeof vi.fn>;
+    hasHotFile: ReturnType<typeof vi.fn>;
     forgetFile: ReturnType<typeof vi.fn>;
   };
   let service: FilesService;
@@ -43,8 +43,8 @@ describe('FilesService delete', () => {
       delete: vi.fn().mockResolvedValue(undefined),
     };
     cache = {
-      rememberFile: vi.fn().mockResolvedValue(undefined),
-      getFileStorageType: vi.fn().mockResolvedValue(null),
+      rememberHotFile: vi.fn().mockResolvedValue(undefined),
+      hasHotFile: vi.fn().mockResolvedValue(false),
       forgetFile: vi.fn().mockResolvedValue(undefined),
     };
 

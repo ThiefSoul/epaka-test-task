@@ -19,8 +19,9 @@ describe('FilesService download', () => {
     delete: ReturnType<typeof vi.fn>;
   };
   let cache: {
-    rememberFile: ReturnType<typeof vi.fn>;
-    getFileStorageType: ReturnType<typeof vi.fn>;
+    rememberHotFile: ReturnType<typeof vi.fn>;
+    rememberHotFiles: ReturnType<typeof vi.fn>;
+    hasHotFile: ReturnType<typeof vi.fn>;
   };
   let service: FilesService;
 
@@ -37,8 +38,9 @@ describe('FilesService download', () => {
       delete: vi.fn().mockResolvedValue(undefined),
     };
     cache = {
-      rememberFile: vi.fn().mockResolvedValue(undefined),
-      getFileStorageType: vi.fn().mockResolvedValue(null),
+      rememberHotFile: vi.fn().mockResolvedValue(undefined),
+      rememberHotFiles: vi.fn().mockResolvedValue(undefined),
+      hasHotFile: vi.fn().mockResolvedValue(false),
     };
 
     service = new FilesService(
@@ -52,16 +54,16 @@ describe('FilesService download', () => {
     warnSpy.mockRestore();
   });
 
-  it('downloads file from cached storage type', async () => {
+  it('downloads hot file from cache hit', async () => {
     const body = Buffer.from('cached file');
-    cache.getFileStorageType.mockResolvedValue(FileStorageType.ARCHIVE);
+    cache.hasHotFile.mockResolvedValue(true);
     storage.get.mockResolvedValue(body);
 
     await expect(service.download('invoice', '123')).resolves.toEqual(body);
 
     expect(repository.findOneBy).not.toHaveBeenCalled();
     expect(storage.get).toHaveBeenCalledWith(
-      FileStorageType.ARCHIVE,
+      FileStorageType.HOT,
       'invoice/123',
     );
   });
@@ -81,15 +83,29 @@ describe('FilesService download', () => {
       FileStorageType.HOT,
       'invoice/123',
     );
-    expect(cache.rememberFile).toHaveBeenCalledWith(
-      'invoice',
-      '123',
-      FileStorageType.HOT,
+    expect(cache.rememberHotFiles).toHaveBeenCalledWith('invoice', ['123']);
+  });
+
+  it('downloads archive file using metadata without caching it', async () => {
+    const body = Buffer.from('archive file');
+    repository.findOneBy.mockResolvedValue({
+      fileType: 'invoice',
+      fileId: '123',
+      storageType: FileStorageType.ARCHIVE,
+    });
+    storage.get.mockResolvedValue(body);
+
+    await expect(service.download('invoice', '123')).resolves.toEqual(body);
+
+    expect(storage.get).toHaveBeenCalledWith(
+      FileStorageType.ARCHIVE,
+      'invoice/123',
     );
+    expect(cache.rememberHotFile).not.toHaveBeenCalled();
   });
 
   it('downloads file using metadata when cache read fails', async () => {
-    cache.getFileStorageType.mockRejectedValue(new Error('redis failed'));
+    cache.hasHotFile.mockRejectedValue(new Error('redis failed'));
     repository.findOneBy.mockResolvedValue({
       fileType: 'invoice',
       fileId: '123',

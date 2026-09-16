@@ -17,7 +17,7 @@ describe('FilesService', () => {
     delete: ReturnType<typeof vi.fn>;
   };
   let cache: {
-    rememberFile: ReturnType<typeof vi.fn>;
+    rememberHotFile: ReturnType<typeof vi.fn>;
   };
   let service: FilesService;
 
@@ -32,7 +32,7 @@ describe('FilesService', () => {
       delete: vi.fn().mockResolvedValue(undefined),
     };
     cache = {
-      rememberFile: vi.fn().mockResolvedValue(undefined),
+      rememberHotFile: vi.fn().mockResolvedValue(undefined),
     };
 
     service = new FilesService(
@@ -79,11 +79,7 @@ describe('FilesService', () => {
   it('updates file cache after successful upload', async () => {
     await service.upload('invoice', '123', Buffer.from('test file'));
 
-    expect(cache.rememberFile).toHaveBeenCalledWith(
-      'invoice',
-      '123',
-      FileStorageType.HOT,
-    );
+    expect(cache.rememberHotFile).toHaveBeenCalledWith('invoice', '123');
   });
 
   it('throws conflict when unique constraint is violated', async () => {
@@ -95,7 +91,7 @@ describe('FilesService', () => {
 
     expect(storage.put).not.toHaveBeenCalled();
     expect(repository.delete).not.toHaveBeenCalled();
-    expect(cache.rememberFile).not.toHaveBeenCalled();
+    expect(cache.rememberHotFile).not.toHaveBeenCalled();
   });
 
   it('does not store file when metadata save fails', async () => {
@@ -108,7 +104,7 @@ describe('FilesService', () => {
 
     expect(storage.put).not.toHaveBeenCalled();
     expect(repository.delete).not.toHaveBeenCalled();
-    expect(cache.rememberFile).not.toHaveBeenCalled();
+    expect(cache.rememberHotFile).not.toHaveBeenCalled();
   });
 
   it('deletes metadata when file storage fails', async () => {
@@ -120,11 +116,11 @@ describe('FilesService', () => {
     ).rejects.toBe(error);
 
     expect(repository.delete).toHaveBeenCalledWith(1);
-    expect(cache.rememberFile).not.toHaveBeenCalled();
+    expect(cache.rememberHotFile).not.toHaveBeenCalled();
   });
 
   it('does not fail upload when cache update fails', async () => {
-    cache.rememberFile.mockRejectedValue(new Error('redis failed'));
+    cache.rememberHotFile.mockRejectedValue(new Error('redis failed'));
 
     await expect(
       service.upload('invoice', '123', Buffer.from('test file')),
