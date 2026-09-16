@@ -21,7 +21,6 @@ services:
       DB_TEST_NAME: ${DB_TEST_NAME:-epaka_test}
       DB_USER: ${DB_USER:-epaka}
       DB_PASSWORD: ${DB_PASSWORD:-epaka}
-      DATABASE_URL: ${DATABASE_URL:-postgresql://${DB_USER:-epaka}:${DB_PASSWORD:-epaka}@${DB_HOST:-db}:${DB_PORT:-5432}/${DB_NAME:-epaka}}
     ports:
       - "3000:3000"
     volumes:
