@@ -56,4 +56,16 @@ Dodatkowo utworzyłem test integracyjny dla `StorageService` zamiast jednostkowe
 ponieważ na potrzeby zadania daje on większą wartość.
 Produkcyjnie mimo wszystko raczej pojawiłby się test jednostkowy mockujący S3.
 
+### Sprawdzanie statusu wielu plików
+
+Użyłem `POST` ze względu na szersze i bardziej przewidywalne wsparcie.
+
+Metoda `QUERY` semantycznie pasowałaby do tego przypadku idealnie, bo operacja tylko odczytuje dane i jednocześnie
+przyjmuje bardziej złożony payload. Jest jednak nadal stosunkowo świeża i może nie być wspierana we wszystkich klientach
+HTTP, proxy czy innych elementach infrastruktury.
+Skoro jest to tylko wewnętrzny serwis to prawdopodobnie nie ma problemu z użyciem `QUERY`,
+ale ewentualna migracja będzie łatwa i szybka.
+
+`GET` odrzuciłem, bo zakładam, że lista ID mogłaby przekroczyć limity dla URL.
+
 ## Uwagi

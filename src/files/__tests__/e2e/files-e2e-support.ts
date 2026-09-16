@@ -1,13 +1,8 @@
 import { INestApplication } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
-import {
-  DeleteObjectsCommand,
-  ListObjectsV2Command,
-  S3Client,
-} from '@aws-sdk/client-s3';
+import { S3Client } from '@aws-sdk/client-s3';
 import { raw } from 'express';
-import { createClient } from 'redis';
 import { DataSource, Repository } from 'typeorm';
 import { AppModule } from '../../../app.module.js';
 import { CreateFileMetadata1789483094152 } from '../../../database/migrations/1789483094152-CreateFileMetadata.js';
@@ -84,73 +79,5 @@ async function runTestMigrations(config: ConfigService): Promise<void> {
     await dataSource.runMigrations();
   } finally {
     await dataSource.destroy();
-  }
-}
-
-export async function cleanFilesE2eData(
-  context: FilesE2eContext,
-  fileTypePrefix: string,
-): Promise<void> {
-  await cleanRedis(context);
-  await cleanS3Bucket(context, context.hotBucket, fileTypePrefix);
-  await cleanS3Bucket(context, context.archiveBucket, fileTypePrefix);
-
-  await context.dataSource.query(
-    'DELETE FROM file_metadata WHERE file_type LIKE $1',
-    [`${fileTypePrefix}-%`],
-  );
-}
-
-async function cleanRedis(context: FilesE2eContext): Promise<void> {
-  const redisDb = context.config.getOrThrow<number>('REDIS_DB');
-
-  if (redisDb !== 1) {
-    throw new Error(`Refusing to flush non-test Redis DB: ${redisDb}`);
-  }
-
-  const client = createClient({
-    database: redisDb,
-    socket: {
-      host: context.config.getOrThrow<string>('REDIS_HOST'),
-      port: context.config.getOrThrow<number>('REDIS_PORT'),
-    },
-  });
-
-  await client.connect();
-  await client.flushDb();
-  await client.quit();
-}
-
-async function cleanS3Bucket(
-  context: FilesE2eContext,
-  bucket: string,
-  fileTypePrefix: string,
-): Promise<void> {
-  assertTestBucket(bucket);
-
-  const objects = await context.s3Client.send(
-    new ListObjectsV2Command({
-      Bucket: bucket,
-      Prefix: `${fileTypePrefix}-`,
-    }),
-  );
-
-  if (!objects.Contents?.length) {
-    return;
-  }
-
-  await context.s3Client.send(
-    new DeleteObjectsCommand({
-      Bucket: bucket,
-      Delete: {
-        Objects: objects.Contents.map(({ Key }) => ({ Key })),
-      },
-    }),
-  );
-}
-
-function assertTestBucket(bucket: string): void {
-  if (!bucket.includes('-test-')) {
-    throw new Error(`Refusing to clean non-test S3 bucket: ${bucket}`);
   }
 }
