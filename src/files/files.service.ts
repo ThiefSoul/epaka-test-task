@@ -28,10 +28,8 @@ export class FilesService {
   ) {}
 
   async upload(fileType: string, fileId: string, body: Buffer): Promise<void> {
-    let metadata: FileMetadataEntity;
-
     try {
-      metadata = await this.fileMetadataRepository.save({
+      await this.fileMetadataRepository.insert({
         fileType,
         fileId,
         storageType: FileStorageType.HOT,
@@ -49,7 +47,7 @@ export class FilesService {
     try {
       await this.storage.put(FileStorageType.HOT, key, body);
     } catch (error) {
-      await this.fileMetadataRepository.delete(metadata.id);
+      await this.fileMetadataRepository.delete({ fileType, fileId });
       throw error;
     }
 

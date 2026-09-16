@@ -16,6 +16,46 @@ docker compose up -d
 docker compose exec app npx typeorm-ts-node-esm migration:run -d src/files/persistance/data-source.ts
 ```
 
+## Load test
+
+Pełny load test wymagany w zadaniu:
+
+```shell
+npm run --silent load:test
+```
+
+Mały lokalny test:
+
+```shell
+npm run --silent load:test -- --types 1 --files-per-type 10 --file-size 1kb --concurrency 2
+```
+
+Dostępne parametry:
+
+- `--api-base-url` - domyślnie `http://localhost:3000`
+- `--types` - domyślnie `10`
+- `--files-per-type` - domyślnie `30000`
+- `--file-size` - domyślnie `100kb`
+- `--concurrency` - domyślnie `20`
+
+Przykład z własnymi parametrami:
+
+```shell
+npm run --silent load:test -- --types 2 --files-per-type 100 --file-size 50kb --concurrency 8
+```
+
+Czyszczenie danych po load teście:
+
+```shell
+npm run --silent load:cleanup
+```
+
+Skrypt usuwa dane z load testu:
+
+- obiekty `load-type-*` z bucketów `epaka-hot` i `epaka-archive`
+- metadane `load-type-*` z PostgreSQL
+- klucze `hot-files:load-type-*` z Redis
+
 ## Założenia i decyzje projektowe
 
 W kilku miejscach treść zadania nie precyzuje dokładnego zachowania serwisu, dlatego przyjmuję poniższe założenia:
