@@ -1,4 +1,4 @@
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, VersioningType } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 import { S3Client } from '@aws-sdk/client-s3';
@@ -30,8 +30,9 @@ export async function createFilesE2eContext(): Promise<FilesE2eContext> {
   }).compile();
 
   const app = moduleRef.createNestApplication();
+  app.enableVersioning({ type: VersioningType.URI });
   app.use(
-    '/files/:fileType/:fileId',
+    '/v1/files/:fileType/:fileId',
     raw({ type: 'application/octet-stream', limit: '10mb' }),
   );
   await app.init();

@@ -30,17 +30,17 @@ describe('Files delete e2e', () => {
     const key = `${fileType}/${fileId}`;
 
     await request(app.getHttpServer())
-      .post(`/files/${fileType}/${fileId}`)
+      .post(`/v1/files/${fileType}/${fileId}`)
       .set('Content-Type', 'application/octet-stream')
       .send(body)
       .expect(201);
 
     await request(app.getHttpServer())
-      .delete(`/files/${fileType}/${fileId}`)
+      .delete(`/v1/files/${fileType}/${fileId}`)
       .expect(204);
 
     await request(app.getHttpServer())
-      .get(`/files/${fileType}/${fileId}`)
+      .get(`/v1/files/${fileType}/${fileId}`)
       .expect(404);
     await expect(storage.exists(FileStorageType.HOT, key)).resolves.toBe(false);
     await expect(
@@ -53,7 +53,7 @@ describe('Files delete e2e', () => {
     const { app } = context;
 
     await request(app.getHttpServer())
-      .delete(`/files/${fileTypePrefix}-${randomUUID()}/missing`)
+      .delete(`/v1/files/${fileTypePrefix}-${randomUUID()}/missing`)
       .expect(404);
   });
 
@@ -61,7 +61,7 @@ describe('Files delete e2e', () => {
     const { app } = context;
 
     await request(app.getHttpServer())
-      .delete(`/files/${fileTypePrefix}.invalid/123`)
+      .delete(`/v1/files/${fileTypePrefix}.invalid/123`)
       .expect(400);
   });
 
@@ -80,11 +80,11 @@ describe('Files delete e2e', () => {
     await storage.put(FileStorageType.ARCHIVE, key, body);
 
     await request(app.getHttpServer())
-      .delete(`/files/${fileType}/${fileId}`)
+      .delete(`/v1/files/${fileType}/${fileId}`)
       .expect(204);
 
     await request(app.getHttpServer())
-      .get(`/files/${fileType}/${fileId}`)
+      .get(`/v1/files/${fileType}/${fileId}`)
       .expect(404);
     await expect(storage.exists(FileStorageType.ARCHIVE, key)).resolves.toBe(
       false,

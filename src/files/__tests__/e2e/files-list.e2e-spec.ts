@@ -35,7 +35,7 @@ describe('Files list e2e', () => {
     await createArchivedFile(context, fileType, archiveFileId);
 
     const response = await request(app.getHttpServer())
-      .get(`/files/${fileType}`)
+      .get(`/v1/files/${fileType}`)
       .expect(200);
 
     expect(response.body.ids).toHaveLength(2);
@@ -47,6 +47,12 @@ describe('Files list e2e', () => {
   it('rejects invalid file type', async () => {
     const { app } = context;
 
-    await request(app.getHttpServer()).get('/files/invalid.type').expect(400);
+    await request(app.getHttpServer()).get('/v1/files/invalid.type').expect(400);
+  });
+
+  it('does not expose an unversioned endpoint', async () => {
+    const { app } = context;
+
+    await request(app.getHttpServer()).get('/files/invoice').expect(404);
   });
 });
