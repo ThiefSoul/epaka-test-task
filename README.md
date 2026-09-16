@@ -181,7 +181,7 @@ z PostgreSQL i wpisy z Redisa.
 ### Upload
 
 ```http
-POST /files/:fileType/:fileId
+POST /v1/files/:fileType/:fileId
 Content-Type: application/octet-stream
 ```
 
@@ -191,7 +191,7 @@ Surowe bajty pliku są przesyłane w body. Maksymalny rozmiar pliku wynosi 10 MB
 ### Download
 
 ```http
-GET /files/:fileType/:fileId
+GET /v1/files/:fileType/:fileId
 ```
 
 Zwraca `200 OK` oraz zawartość z `Content-Type: application/octet-stream`. Brak pliku zwraca `404 Not Found`.
@@ -199,7 +199,7 @@ Zwraca `200 OK` oraz zawartość z `Content-Type: application/octet-stream`. Bra
 ### Delete
 
 ```http
-DELETE /files/:fileType/:fileId
+DELETE /v1/files/:fileType/:fileId
 ```
 
 Usuwa zawartość, metadane i wpis cache. Sukces zwraca `204 No Content`, a brak pliku `404 Not Found`.
@@ -207,7 +207,7 @@ Usuwa zawartość, metadane i wpis cache. Sukces zwraca `204 No Content`, a brak
 ### Lista plików
 
 ```http
-GET /files/:fileType
+GET /v1/files/:fileType
 ```
 
 ```json
@@ -224,7 +224,7 @@ Lista pochodzi z PostgreSQL i zawiera pliki gorące i archiwalne.
 ### Status wielu plików
 
 ```http
-POST /files/:fileType/status
+POST /v1/files/:fileType/status
 Content-Type: application/json
 ```
 
