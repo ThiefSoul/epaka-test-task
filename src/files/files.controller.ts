@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   Header,
   HttpCode,
@@ -24,6 +25,15 @@ export class FilesController {
     @Param('fileId', FileKeyPartPipe) fileId: string,
   ): Promise<StreamableFile> {
     return new StreamableFile(await this.files.download(fileType, fileId));
+  }
+
+  @Delete(':fileType/:fileId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async delete(
+    @Param('fileType', FileKeyPartPipe) fileType: string,
+    @Param('fileId', FileKeyPartPipe) fileId: string,
+  ): Promise<void> {
+    await this.files.delete(fileType, fileId);
   }
 
   @Post(':fileType/:fileId')

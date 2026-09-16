@@ -12,6 +12,7 @@ import { DataSource, Repository } from 'typeorm';
 import { AppModule } from '../../../app.module.js';
 import { CreateFileMetadata1789483094152 } from '../../../database/migrations/1789483094152-CreateFileMetadata.js';
 import { StorageService } from '../../../storage/storage.service.js';
+import { FileCacheService } from '../../file-cache.service.js';
 import { FileMetadataEntity } from '../../persistance/file-metadata.entity.js';
 
 export type FilesE2eContext = {
@@ -20,6 +21,7 @@ export type FilesE2eContext = {
   dataSource: DataSource;
   metadataRepository: Repository<FileMetadataEntity>;
   storage: StorageService;
+  cache: FileCacheService;
   s3Client: S3Client;
   hotBucket: string;
   archiveBucket: string;
@@ -58,6 +60,7 @@ export async function createFilesE2eContext(): Promise<FilesE2eContext> {
     dataSource,
     metadataRepository: dataSource.getRepository(FileMetadataEntity),
     storage: app.get(StorageService),
+    cache: app.get(FileCacheService),
     s3Client,
     hotBucket: config.getOrThrow<string>('S3_HOT_BUCKET'),
     archiveBucket: config.getOrThrow<string>('S3_ARCHIVE_BUCKET'),
