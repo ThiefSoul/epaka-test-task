@@ -35,6 +35,24 @@ export class FileCacheService implements OnModuleInit, OnModuleDestroy {
       .exec();
   }
 
+  async getFileStorageType(
+    fileType: string,
+    fileId: string,
+  ): Promise<FileStorageType | null> {
+    const storageType = await this.client.get(
+      this.fileStorageTypeKey(fileType, fileId),
+    );
+
+    if (
+      storageType === FileStorageType.HOT ||
+      storageType === FileStorageType.ARCHIVE
+    ) {
+      return storageType;
+    }
+
+    return null;
+  }
+
   async onModuleDestroy(): Promise<void> {
     if (this.client.isOpen) {
       await this.client.quit();

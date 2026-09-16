@@ -1,10 +1,10 @@
 import { ConflictException, Logger } from '@nestjs/common';
 import { QueryFailedError, type Repository } from 'typeorm';
-import { StorageService } from '../storage/storage.service.js';
-import { FileCacheService } from './file-cache.service.js';
-import { FileMetadataEntity } from './persistance/file-metadata.entity.js';
-import { FileStorageType } from './persistance/file-storage-type.js';
-import { FilesService } from './files.service.js';
+import { StorageService } from '../../../storage/storage.service.js';
+import { FileCacheService } from '../../file-cache.service.js';
+import { FileMetadataEntity } from '../../persistance/file-metadata.entity.js';
+import { FileStorageType } from '../../persistance/file-storage-type.js';
+import { FilesService } from '../../files.service.js';
 
 describe('FilesService', () => {
   let warnSpy: ReturnType<typeof vi.spyOn>;
