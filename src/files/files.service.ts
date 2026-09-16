@@ -54,7 +54,7 @@ export class FilesService {
     }
 
     try {
-      await this.cache.rememberFile(fileType, fileId, FileStorageType.HOT);
+      await this.cache.rememberHotFile(fileType, fileId);
     } catch (error) {
       this.logger.warn(
         `Uploaded file ${fileType}/${fileId}, but cache update failed: ${this.errorMessage(error)}`,
@@ -96,17 +96,21 @@ export class FilesService {
     fileIds: string[],
   ): Promise<FileStatusesResponseDto> {
     const uniqueFileIds = [...new Set(fileIds)];
-    const cachedStorageTypes = await this.getCachedStorageTypes(
+    const hotFileIds = await this.getCachedHotFileIds(
       fileType,
       uniqueFileIds,
     );
     const missingIds = uniqueFileIds.filter(
-      (fileId) => !cachedStorageTypes.has(fileId),
+      (fileId) => !hotFileIds.has(fileId),
     );
-    const storageTypes = new Map([
-      ...cachedStorageTypes,
-      ...(await this.getMetadataStorageTypes(fileType, missingIds)),
-    ]);
+    const storageTypes = await this.getMetadataStorageTypes(
+      fileType,
+      missingIds,
+    );
+
+    for (const fileId of hotFileIds) {
+      storageTypes.set(fileId, FileStorageType.HOT);
+    }
 
     const files = uniqueFileIds.map((fileId) =>
       this.fileStatus(fileId, storageTypes.get(fileId) ?? null),
@@ -145,13 +149,10 @@ export class FilesService {
     fileId: string,
   ): Promise<FileStorageType> {
     try {
-      const cachedStorageType = await this.cache.getFileStorageType(
-        fileType,
-        fileId,
-      );
+      const isHot = await this.cache.hasHotFile(fileType, fileId);
 
-      if (cachedStorageType) {
-        return cachedStorageType;
+      if (isHot) {
+        return FileStorageType.HOT;
       }
     } catch (error) {
       this.logger.warn(
@@ -168,31 +169,23 @@ export class FilesService {
       throw new NotFoundException('File not found.');
     }
 
-    try {
-      await this.cache.rememberFile(fileType, fileId, metadata.storageType);
-    } catch (error) {
-      this.logger.warn(
-        `Found file ${fileType}/${fileId}, but cache update failed: ${this.errorMessage(error)}`,
-      );
-    }
+    await this.rememberHotMetadata(fileType, [metadata]);
 
     return metadata.storageType;
   }
 
-  private async getCachedStorageTypes(
+  private async getCachedHotFileIds(
     fileType: string,
     fileIds: string[],
-  ): Promise<Map<string, FileStorageType>> {
+  ): Promise<Set<string>> {
     try {
-      return await this.cache.getFileStorageTypes(fileType, [
-        ...new Set(fileIds),
-      ]);
+      return await this.cache.getHotFileIds(fileType, fileIds);
     } catch (error) {
       this.logger.warn(
         `Could not read file statuses for ${fileType} from cache: ${this.errorMessage(error)}`,
       );
 
-      return new Map();
+      return new Set();
     }
   }
 
@@ -215,19 +208,28 @@ export class FilesService {
       },
     });
 
-    for (const { fileId, storageType } of metadata) {
-      try {
-        await this.cache.rememberFile(fileType, fileId, storageType);
-      } catch (error) {
-        this.logger.warn(
-          `Found file ${fileType}/${fileId}, but cache update failed: ${this.errorMessage(error)}`,
-        );
-      }
-    }
+    await this.rememberHotMetadata(fileType, metadata);
 
     return new Map(
       metadata.map(({ fileId, storageType }) => [fileId, storageType]),
     );
+  }
+
+  private async rememberHotMetadata(
+    fileType: string,
+    metadata: Pick<FileMetadataEntity, 'fileId' | 'storageType'>[],
+  ): Promise<void> {
+    const hotFileIds = metadata
+      .filter(({ storageType }) => storageType === FileStorageType.HOT)
+      .map(({ fileId }) => fileId);
+
+    try {
+      await this.cache.rememberHotFiles(fileType, hotFileIds);
+    } catch (error) {
+      this.logger.warn(
+        `Found hot files for ${fileType}, but cache update failed: ${this.errorMessage(error)}`,
+      );
+    }
   }
 
   private storageKey(fileType: string, fileId: string): string {
