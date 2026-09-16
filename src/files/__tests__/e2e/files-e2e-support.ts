@@ -7,6 +7,7 @@ import { DataSource, Repository } from 'typeorm';
 import { AppModule } from '../../../app.module.js';
 import { CreateFileMetadata1789483094152 } from '../../../database/migrations/1789483094152-CreateFileMetadata.js';
 import { StorageService } from '../../../storage/storage.service.js';
+import { FileArchiverService } from '../../file-archiver.service.js';
 import { FileCacheService } from '../../file-cache.service.js';
 import { FileMetadataEntity } from '../../persistance/file-metadata.entity.js';
 
@@ -15,6 +16,7 @@ export type FilesE2eContext = {
   config: ConfigService;
   dataSource: DataSource;
   metadataRepository: Repository<FileMetadataEntity>;
+  archiver: FileArchiverService;
   storage: StorageService;
   cache: FileCacheService;
   s3Client: S3Client;
@@ -36,6 +38,9 @@ export async function createFilesE2eContext(): Promise<FilesE2eContext> {
 
   const config = app.get(ConfigService);
   const dataSource = app.get(DataSource);
+  const metadataRepository = dataSource.getRepository(FileMetadataEntity);
+  const storage = app.get(StorageService);
+  const cache = app.get(FileCacheService);
 
   await runTestMigrations(config);
 
@@ -53,9 +58,10 @@ export async function createFilesE2eContext(): Promise<FilesE2eContext> {
     app,
     config,
     dataSource,
-    metadataRepository: dataSource.getRepository(FileMetadataEntity),
-    storage: app.get(StorageService),
-    cache: app.get(FileCacheService),
+    metadataRepository,
+    archiver: app.get(FileArchiverService),
+    storage,
+    cache,
     s3Client,
     hotBucket: config.getOrThrow<string>('S3_HOT_BUCKET'),
     archiveBucket: config.getOrThrow<string>('S3_ARCHIVE_BUCKET'),
