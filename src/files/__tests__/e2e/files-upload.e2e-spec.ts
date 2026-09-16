@@ -22,11 +22,12 @@ describe('Files upload e2e', () => {
     await context.app.close();
   });
 
-  it('uploads a binary body to hot storage', async () => {
-    const { app, storage } = context;
+  it('uploads a binary body to hot storage, database and cache', async () => {
+    const { app, cache, metadataRepository, storage } = context;
     const fileType = `${fileTypePrefix}-${randomUUID()}`;
     const fileId = randomUUID();
     const body = Buffer.from([0xde, 0xad, 0xbe, 0xef]);
+    const key = `${fileType}/${fileId}`;
 
     await request(app.getHttpServer())
       .post(`/files/${fileType}/${fileId}`)
@@ -34,9 +35,17 @@ describe('Files upload e2e', () => {
       .send(body)
       .expect(201);
 
+    await expect(storage.get(FileStorageType.HOT, key)).resolves.toEqual(body);
     await expect(
-      storage.get(FileStorageType.HOT, `${fileType}/${fileId}`),
-    ).resolves.toEqual(body);
+      metadataRepository.findOneBy({ fileType, fileId }),
+    ).resolves.toMatchObject({
+      fileType,
+      fileId,
+      storageType: FileStorageType.HOT,
+    });
+    await expect(cache.getFileStorageType(fileType, fileId)).resolves.toBe(
+      FileStorageType.HOT,
+    );
   });
 
   it('rejects an empty body', async () => {

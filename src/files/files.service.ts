@@ -115,6 +115,31 @@ export class FilesService {
     return { files };
   }
 
+  async delete(fileType: string, fileId: string): Promise<void> {
+    const metadata = await this.fileMetadataRepository.findOneBy({
+      fileType,
+      fileId,
+    });
+
+    if (!metadata) {
+      throw new NotFoundException('File not found.');
+    }
+
+    await this.storage.delete(
+      metadata.storageType,
+      this.storageKey(fileType, fileId),
+    );
+    await this.fileMetadataRepository.delete(metadata.id);
+
+    try {
+      await this.cache.forgetFile(fileType, fileId);
+    } catch (error) {
+      this.logger.warn(
+        `Deleted file ${fileType}/${fileId}, but cache cleanup failed: ${this.errorMessage(error)}`,
+      );
+    }
+  }
+
   private async resolveStorageType(
     fileType: string,
     fileId: string,
