@@ -16,7 +16,7 @@
     "start:prod": "node dist/main",
     "lint": "oxlint --type-aware src/ test/",
     "test": "vitest run",
-    "test:unit": "vitest run --exclude \"**/*.integration.spec.ts\" --passWithNoTests",
+    "test:unit": "vitest run --exclude \"**/*.integration-spec.ts\" --passWithNoTests",
     "test:watch": "vitest",
     "test:integration": "vitest run --config ./vitest.config.integration.ts",
     "test:cov": "vitest run --coverage",
