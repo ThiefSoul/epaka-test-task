@@ -5,19 +5,20 @@ import {
   HttpCode,
   HttpStatus,
   Param,
-  Put,
+  Post,
 } from '@nestjs/common';
+import { FileKeyPartPipe } from './file-key-part.pipe.js';
 import { FilesService } from './files.service.js';
 
 @Controller('files')
 export class FilesController {
   constructor(private readonly files: FilesService) {}
 
-  @Put(':fileType/:fileId')
+  @Post(':fileType/:fileId')
   @HttpCode(HttpStatus.CREATED)
   async upload(
-    @Param('fileType') fileType: string,
-    @Param('fileId') fileId: string,
+    @Param('fileType', FileKeyPartPipe) fileType: string,
+    @Param('fileId', FileKeyPartPipe) fileId: string,
     @Body() body: Buffer,
   ): Promise<void> {
     if (!Buffer.isBuffer(body) || body.length === 0) {
