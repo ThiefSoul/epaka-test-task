@@ -53,6 +53,14 @@ export class FileCacheService implements OnModuleInit, OnModuleDestroy {
     return null;
   }
 
+  async forgetFile(fileType: string, fileId: string): Promise<void> {
+    await this.client
+      .multi()
+      .sRem(this.fileTypeIdsKey(fileType), fileId)
+      .del(this.fileStorageTypeKey(fileType, fileId))
+      .exec();
+  }
+
   async onModuleDestroy(): Promise<void> {
     if (this.client.isOpen) {
       await this.client.quit();
