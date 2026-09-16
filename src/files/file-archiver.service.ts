@@ -64,6 +64,8 @@ export class FileArchiverService {
         throw new Error(`Archived file ${key} was not found after copy.`);
       }
 
+      await this.cache.forgetFile(file.fileType, file.fileId);
+
       const updateResult = await this.fileMetadataRepository.update(
         { id: file.id, storageType: FileStorageType.HOT },
         { storageType: FileStorageType.ARCHIVE },
@@ -74,20 +76,9 @@ export class FileArchiverService {
       }
 
       await this.storage.delete(FileStorageType.HOT, key);
-      await this.forgetHotFile(file);
     } catch (error) {
       this.logger.warn(
         `Could not archive file ${key}: ${this.errorMessage(error)}`,
-      );
-    }
-  }
-
-  private async forgetHotFile(file: FileMetadataEntity): Promise<void> {
-    try {
-      await this.cache.forgetFile(file.fileType, file.fileId);
-    } catch (error) {
-      this.logger.warn(
-        `Archived file ${file.fileType}/${file.fileId}, but cache cleanup failed: ${this.errorMessage(error)}`,
       );
     }
   }
