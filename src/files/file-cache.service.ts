@@ -43,14 +43,27 @@ export class FileCacheService implements OnModuleInit, OnModuleDestroy {
       this.fileStorageTypeKey(fileType, fileId),
     );
 
-    if (
-      storageType === FileStorageType.HOT ||
-      storageType === FileStorageType.ARCHIVE
-    ) {
-      return storageType;
-    }
+    return this.parseStorageType(storageType);
+  }
 
-    return null;
+  async getFileStorageTypes(
+    fileType: string,
+    fileIds: string[],
+  ): Promise<Map<string, FileStorageType>> {
+    const storageTypes = await this.client.mGet(
+      fileIds.map((fileId) => this.fileStorageTypeKey(fileType, fileId)),
+    );
+    const result = new Map<string, FileStorageType>();
+
+    storageTypes.forEach((storageType, index) => {
+      const parsedStorageType = this.parseStorageType(storageType);
+
+      if (parsedStorageType) {
+        result.set(fileIds[index], parsedStorageType);
+      }
+    });
+
+    return result;
   }
 
   async onModuleDestroy(): Promise<void> {
@@ -65,5 +78,13 @@ export class FileCacheService implements OnModuleInit, OnModuleDestroy {
 
   private fileStorageTypeKey(fileType: string, fileId: string): string {
     return `files:${fileType}:${fileId}:storage-type`;
+  }
+
+  private parseStorageType(storageType: string | null): FileStorageType | null {
+    return Object.values(FileStorageType).includes(
+      storageType as FileStorageType,
+    )
+      ? (storageType as FileStorageType)
+      : null;
   }
 }
