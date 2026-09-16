@@ -9,7 +9,7 @@ import { FilesService } from '../../files.service.js';
 describe('FilesService', () => {
   let warnSpy: ReturnType<typeof vi.spyOn>;
   let repository: {
-    save: ReturnType<typeof vi.fn>;
+    insert: ReturnType<typeof vi.fn>;
     delete: ReturnType<typeof vi.fn>;
   };
   let storage: {
@@ -24,7 +24,7 @@ describe('FilesService', () => {
   beforeEach(() => {
     warnSpy = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => {});
     repository = {
-      save: vi.fn().mockResolvedValue({ id: 1 }),
+      insert: vi.fn().mockResolvedValue({}),
       delete: vi.fn().mockResolvedValue({}),
     };
     storage = {
@@ -61,7 +61,7 @@ describe('FilesService', () => {
   it('persists file metadata', async () => {
     await service.upload('invoice', '123', Buffer.from('test file'));
 
-    expect(repository.save).toHaveBeenCalledWith({
+    expect(repository.insert).toHaveBeenCalledWith({
       fileType: 'invoice',
       fileId: '123',
       storageType: FileStorageType.HOT,
@@ -71,7 +71,7 @@ describe('FilesService', () => {
   it('stores file after metadata is reserved', async () => {
     await service.upload('invoice', '123', Buffer.from('test file'));
 
-    expect(repository.save.mock.invocationCallOrder[0]).toBeLessThan(
+    expect(repository.insert.mock.invocationCallOrder[0]).toBeLessThan(
       storage.put.mock.invocationCallOrder[0],
     );
   });
@@ -83,7 +83,7 @@ describe('FilesService', () => {
   });
 
   it('throws conflict when unique constraint is violated', async () => {
-    repository.save.mockRejectedValue(uniqueViolationError());
+    repository.insert.mockRejectedValue(uniqueViolationError());
 
     await expect(
       service.upload('invoice', '123', Buffer.from('test file')),
@@ -96,7 +96,7 @@ describe('FilesService', () => {
 
   it('does not store file when metadata save fails', async () => {
     const error = new Error('database failed');
-    repository.save.mockRejectedValue(error);
+    repository.insert.mockRejectedValue(error);
 
     await expect(
       service.upload('invoice', '123', Buffer.from('test file')),
@@ -115,7 +115,10 @@ describe('FilesService', () => {
       service.upload('invoice', '123', Buffer.from('test file')),
     ).rejects.toBe(error);
 
-    expect(repository.delete).toHaveBeenCalledWith(1);
+    expect(repository.delete).toHaveBeenCalledWith({
+      fileType: 'invoice',
+      fileId: '123',
+    });
     expect(cache.rememberHotFile).not.toHaveBeenCalled();
   });
 
