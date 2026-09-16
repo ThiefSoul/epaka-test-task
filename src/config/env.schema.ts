@@ -10,6 +10,9 @@ export const envSchema = z.object({
   S3_HOT_BUCKET: z.string().default('epaka-hot'),
   S3_ARCHIVE_BUCKET: z.string().default('epaka-archive'),
 
+  REDIS_HOST: z.string().default('redis'),
+  REDIS_PORT: z.coerce.number().default(6379),
+
   DB_HOST: z.string().default('db'),
   DB_PORT: z.coerce.number().default(5432),
   DB_NAME: z.string().default('epaka'),
