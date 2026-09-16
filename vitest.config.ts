@@ -12,5 +12,6 @@ export default defineConfig({
     globals: true,
     root: './',
     include: ['**/*.spec.ts', '**/*.integration-spec.ts', '**/*.e2e-spec.ts'],
+    fileParallelism: false,
   },
 });
