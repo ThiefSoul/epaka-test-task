@@ -1,8 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import request from 'supertest';
 import { FileStorageType } from '../../persistance/file-storage-type.js';
+import { cleanFilesE2eData } from './files-e2e-data.js';
 import {
-  cleanFilesE2eData,
   createFilesE2eContext,
   type FilesE2eContext,
 } from './files-e2e-support.js';
